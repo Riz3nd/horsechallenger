@@ -83,3 +83,13 @@ lint/generated/
 lint/outputs/
 lint/tmp/
 # lint/reports/
+
+# My properties
+.gradle
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+.idea/sonarlint/
