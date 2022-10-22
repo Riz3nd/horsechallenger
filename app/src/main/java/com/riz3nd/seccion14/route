@@ -1,0 +1,25 @@
+HOJA DE RUTA
+
+1. Mejorar las funcionalidades existentes
+2. Mejorar la UX de las funciones existentes
+3. Añadir nuevas funcionalidades
+
+ERRORES
+- Redimensionado del tablero - OK
+- Quitar la action bar - OK
+
+MEJORAS DE UX
+- Un color para el punto actual, y otro para el rastro
+- Mostrar opciones de movimiento
+
+FUNCIONALIDADES
+- Inicio aleatoreo
+- Poder mover el caballo (comprobando el movimiento de L)
+- Pintar niveles y limpiarlos
+- Control de movimientos
+- Control de opciones
+- Control de tiempo
+- Control de vidas
+- Mostrar publicidad para ser premium
+- Habilitar accesos de premiun a mas niveles y deshabilitar publicidad
+- Opcion de compartir resultado

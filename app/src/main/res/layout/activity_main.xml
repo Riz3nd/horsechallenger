@@ -245,7 +245,6 @@
                             android:layout_weight="1"
                             android:background="@color/white_cell"
                             android:onClick="checkCellClicked"
-                            android:src="@drawable/horse"
                             android:tag="c07" />
 
                         <ImageView
