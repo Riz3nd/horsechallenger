@@ -14,7 +14,7 @@ class MainActivity : AppCompatActivity() {
     var cellSelected_x = 0
     var cellSelected_y = 0
     private lateinit var board:Array<IntArray>
-
+    private var options = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,9 +57,7 @@ class MainActivity : AppCompatActivity() {
         val size = Point()
         display.getSize(size)
         val width = size.x
-
         var width_dp = (width / resources.displayMetrics.density)
-
         var lateralMarginsDP = 0
         val width_cell = (width_dp - lateralMarginsDP)/8
         val height_cell = width_cell
@@ -85,15 +83,35 @@ class MainActivity : AppCompatActivity() {
         x = (0..7).random()
         y = (0..7).random()
         cellSelected_x = x
-        cellSelected_y = x
+        cellSelected_y = y
         seletCell(x, y)
     }
 
     private fun seletCell(x: Int, y: Int) {
+        board[x][y] = 1
         paintHorseCell(cellSelected_x, cellSelected_y, "previus_cell")
         cellSelected_x = x
         cellSelected_y = y
         paintHorseCell(x, y, "selected_cell")
+        checkOptions(x, y)
+    }
+
+    private fun checkOptions(x: Int, y: Int) {
+        options = 0
+        checkMove(x, y, 1, 2)     // check move right - top long
+        checkMove(x, y, 2, 1)     // check move right long - top
+        checkMove(x, y, 1, -2)    // check move right - bottom long
+        checkMove(x, y, 2, -1)    // check move right long - bottom
+        checkMove(x, y, -1, 2)    // check move left - top long
+        checkMove(x, y, -2, 1)    // check move left long -top
+        checkMove(x, y, -1, -2)   // check move left - bottom long
+        checkMove(x, y, -2, -1)   // check move left long bottom
+    }
+
+    private fun checkMove(x: Int, y: Int, mov_x: Int, mov_y: Int) {
+        var option_x = x + mov_x
+        var option_y = y + mov_y
+
     }
 
     private fun paintHorseCell(x: Int, y: Int, color: String) {
@@ -103,6 +121,25 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun checkCellClicked(view: View){
+        var name = view.tag.toString()
+        var x = name.subSequence(1, 2).toString().toInt()
+        var y = name.subSequence(2, 3).toString().toInt()
+        checkCell(x, y)
+    }
 
+    private fun checkCell(x: Int, y: Int) {
+        var dif_x = x - cellSelected_x
+        var dif_y = y - cellSelected_y
+        var checkTrue = false
+        if (dif_x == 1 && dif_y == 2)   checkTrue = true // right - top long
+        if (dif_x == 1 && dif_y == -2)  checkTrue = true // right - bottom long
+        if (dif_x == 2 && dif_y == 1)   checkTrue = true // right long - top
+        if (dif_x == 2 && dif_y == -1)  checkTrue = true // right long - bottom
+        if (dif_x == -1 && dif_y == 2)  checkTrue = true // left - top long
+        if (dif_x == -1 && dif_y == -2) checkTrue = true // left - bottom long
+        if (dif_x == -2 && dif_y == 1)  checkTrue = true // left long - top
+        if (dif_x == -2 && dif_y == -1) checkTrue = true // left long - bottom
+        if(board[x][y] == 1) checkTrue = false
+        if(checkTrue) seletCell(x, y)
     }
 }
