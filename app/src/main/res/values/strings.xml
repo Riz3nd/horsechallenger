@@ -9,6 +9,7 @@
     <string name="options">Options</string>
     <string name="instructions">Move the horse over board to complete all cells.</string>
     <string name="credits">Game created by Oscar Argaez.</string>
+    <string name="nextLevel">Next Level</string>
 
     <string name="premium">Tap here to remove ads, get more levels and unlimited lives</string>
     <string name="premiunTitle">Get Premium Access Forever</string>
