@@ -3,12 +3,17 @@ package com.riz3nd.seccion14
 import android.graphics.Point
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.TypedValue
 import android.view.View
 import android.widget.*
 import androidx.core.content.ContextCompat
+import java.lang.Exception
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
+    private var gaming = true
     private var cellSelected_x = 0
     private var cellSelected_y = 0
     private lateinit var board:Array<IntArray>
@@ -17,19 +22,64 @@ class MainActivity : AppCompatActivity() {
     private var nameColorWhite = "white_cell"
     private var levelMoves = 64
     private var moves = 64
-    private var movesRequired = 4
+    private var movesRequired = 8
     private var bonus = 0
     private var width_Bonus = 0
     private var checkMovement = true
+    private var mHandler:Handler? = null
+    private var timeInSecons:Long = 0
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         initScreenGame()
-        resetBoard()
-        setFirstPosition()
+        startGame()
     }
+
+    fun startGame() {
+        resetStatus()
+        resetBoard()
+        clearBoard()
+        setFirstPosition()
+        resetTime()
+        startTime()
+    }
+
+    fun startGame(view: View) {
+        resetStatus()
+        resetBoard()
+        clearBoard()
+        setFirstPosition()
+        hideMessage()
+        resetTime()
+        startTime()
+    }
+
+    private fun resetStatus(){
+        gaming = true
+        moves = levelMoves
+        bonus = 0
+        options = 0
+    }
+
+    private fun clearBoard() {
+        var iv: ImageView
+        var colorBlack = ContextCompat.getColor(this,
+            resources.getIdentifier(nameColorBlack, "color", packageName))
+        var colorWhite = ContextCompat.getColor(this,
+            resources.getIdentifier(nameColorWhite, "color", packageName))
+        for (i in 0..7){
+            for (j in 0..7){
+                iv = findViewById(resources.getIdentifier("c$i$j", "id", packageName))
+//                iv.setImageResource(R.drawable.horse)
+                iv.setImageResource(0)
+                if (checkColorCell(i, j) == "black") iv.setBackgroundColor(colorBlack)
+                else iv.setBackgroundColor(colorWhite)
+            }
+        }
+    }
+
 
     /**
      * Metodo para reiniciar el tablero
@@ -81,6 +131,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+
     private fun hideMessage() {
         var lyMessage = findViewById<LinearLayout>(R.id.lyMessage)
         lyMessage.visibility = View.GONE
@@ -93,10 +144,36 @@ class MainActivity : AppCompatActivity() {
         y = (0..7).random()
         cellSelected_x = x
         cellSelected_y = y
-        seletCell(x, y)
+        selectCell(x, y)
     }
 
-    private fun seletCell(x: Int, y: Int) {
+
+    private fun checkCell(x: Int, y: Int) {
+        var checkTrue = true
+        if (checkMovement){
+            var dif_x = x - cellSelected_x
+            var dif_y = y - cellSelected_y
+            checkTrue = false
+            if (dif_x == 1 && dif_y == 2)   checkTrue = true // right - top long
+            if (dif_x == 1 && dif_y == -2)  checkTrue = true // right - bottom long
+            if (dif_x == 2 && dif_y == 1)   checkTrue = true // right long - top
+            if (dif_x == 2 && dif_y == -1)  checkTrue = true // right long - bottom
+            if (dif_x == -1 && dif_y == 2)  checkTrue = true // left - top long
+            if (dif_x == -1 && dif_y == -2) checkTrue = true // left - bottom long
+            if (dif_x == -2 && dif_y == 1)  checkTrue = true // left long - top
+            if (dif_x == -2 && dif_y == -1) checkTrue = true // left long - bottom
+        }else{
+            if(board[x][y] != 1){
+                bonus--
+                var tvBonusData = findViewById<TextView>(R.id.tvBonusData)
+                tvBonusData.text = "$bonus"
+            }
+        }
+        if(board[x][y] == 1) checkTrue = false
+        if(checkTrue) selectCell(x, y)
+    }
+
+    private fun selectCell(x: Int, y: Int) {
         moves--
         var tvModesData = findViewById<TextView>(R.id.tvMovesData)
         tvModesData.text = moves.toString()
@@ -127,15 +204,54 @@ class MainActivity : AppCompatActivity() {
         else showMessage("You Win!", "Next Level", false)
     }
 
+    fun checkCellClicked(view: View){
+        var name = view.tag.toString()
+        var x = name.subSequence(1, 2).toString().toInt()
+        var y = name.subSequence(2, 3).toString().toInt()
+        checkCell(x, y)
+    }
+
+
     private fun checkGameOver(x: Int, y: Int) {
         if(options == 0){
-            if (bonus == 0){
-                showMessage("Game Over", "Try Again!", true)
-            } else {
+            if (bonus > 0){
                 checkMovement = false
+                paintAllOptions()
+            }else showMessage("Game Over", "Try Again!", true)
+        }
+    }
+
+    private fun paintAllOptions() {
+        for (i in 0..7){
+            for (j in 0..7){
+                if(board[i][j] != 1) paintOption(i, j)
+                if(board[i][j] == 0) board[i][j] = 9
             }
         }
     }
+
+    private fun paintOption(x: Int, y: Int) {
+        var iv:ImageView = findViewById(resources.getIdentifier("c$x$y","id", packageName))
+        if(checkColorCell(x, y) == "black") iv.setBackgroundResource(R.drawable.option_black)
+        else iv.setBackgroundResource(R.drawable.option_white)
+    }
+
+
+    private fun checkColorCell(x: Int, y: Int): String {
+        var blackColumn_x = arrayOf(0,2,4,6)
+        var blackRow_x = arrayOf(1,3,5,7)
+        if((blackColumn_x.contains(x) && blackColumn_x.contains(y))
+            || (blackRow_x.contains(x) && blackRow_x.contains(y)))
+            return "black"
+        else return  "white"
+    }
+
+    private fun paintHorseCell(x: Int, y: Int, color: String) {
+        var iv:ImageView = findViewById(resources.getIdentifier("c$x$y","id", packageName))
+        iv.setBackgroundColor(ContextCompat.getColor(this, resources.getIdentifier(color, "color", packageName)))
+        iv.setImageResource(R.drawable.horse)
+    }
+
 
     fun showMessage(title:String, message:String, status:Boolean){
         var lyMessage = findViewById<LinearLayout>(R.id.lyMessage)
@@ -143,6 +259,7 @@ class MainActivity : AppCompatActivity() {
         var tvScoreMessage = findViewById<TextView>(R.id.tvScoreMessage)
         var btnNextLevel = findViewById<Button>(R.id.btnNextLevel)
         var tvTimeData = findViewById<TextView>(R.id.tvTimeData)
+        gaming = false
 
         lyMessage.visibility = View.VISIBLE
         if(status){
@@ -153,6 +270,7 @@ class MainActivity : AppCompatActivity() {
         tvIntroLevel.text = title
         btnNextLevel.text = message
     }
+
 
     private fun  growProgressBonus() {
         var moves_done = levelMoves - moves
@@ -228,7 +346,7 @@ class MainActivity : AppCompatActivity() {
             if(board[option_x][option_y] == 0 ||
                 board[option_x][option_y] == 2){
                 options++
-                paintOptions(option_x, option_y)
+                paintOption(option_x, option_y)
                 if(board[option_x][option_y] == 0) board[option_x][option_y] = 9
 
             }
@@ -236,56 +354,45 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun paintOptions(x: Int, y: Int) {
-        var iv:ImageView = findViewById(resources.getIdentifier("c$x$y","id", packageName))
-        if(checkColorCell(x, y) == "black") iv.setBackgroundResource(R.drawable.option_black)
-        else iv.setBackgroundResource(R.drawable.option_white)
-    }
-
-    private fun checkColorCell(x: Int, y: Int): String {
-        var blackColumn_x = arrayOf(0,2,4,6)
-        var blackRow_x = arrayOf(1,3,5,7)
-        if((blackColumn_x.contains(x) && blackColumn_x.contains(y))
-            || (blackRow_x.contains(x) && blackRow_x.contains(y)))
-                return "black"
-        else return  "white"
-    }
-
-    private fun paintHorseCell(x: Int, y: Int, color: String) {
-        var iv:ImageView = findViewById(resources.getIdentifier("c$x$y","id", packageName))
-        iv.setBackgroundColor(ContextCompat.getColor(this, resources.getIdentifier(color, "color", packageName)))
-        iv.setImageResource(R.drawable.horse)
-    }
-
-    fun checkCellClicked(view: View){
-        var name = view.tag.toString()
-        var x = name.subSequence(1, 2).toString().toInt()
-        var y = name.subSequence(2, 3).toString().toInt()
-        checkCell(x, y)
-    }
-
-    private fun checkCell(x: Int, y: Int) {
-        var checkTrue = true
-        if (checkMovement){
-            var dif_x = x - cellSelected_x
-            var dif_y = y - cellSelected_y
-            checkTrue = false
-            if (dif_x == 1 && dif_y == 2)   checkTrue = true // right - top long
-            if (dif_x == 1 && dif_y == -2)  checkTrue = true // right - bottom long
-            if (dif_x == 2 && dif_y == 1)   checkTrue = true // right long - top
-            if (dif_x == 2 && dif_y == -1)  checkTrue = true // right long - bottom
-            if (dif_x == -1 && dif_y == 2)  checkTrue = true // left - top long
-            if (dif_x == -1 && dif_y == -2) checkTrue = true // left - bottom long
-            if (dif_x == -2 && dif_y == 1)  checkTrue = true // left long - top
-            if (dif_x == -2 && dif_y == -1) checkTrue = true // left long - bottom
-        }else{
-            if(board[x][y] != 1){
-                bonus--
-                var tvBonusData = findViewById<TextView>(R.id.tvBonusData)
-                tvBonusData.text = "$bonus"
+    private var chronometer: Runnable = object: Runnable{
+        override fun run() {
+            try {
+                if (gaming){
+                    timeInSecons++
+                    updateStopWatchView(timeInSecons)
+                }
+            } finally {
+                mHandler!!.postDelayed(this, 1000)
             }
         }
-        if(board[x][y] == 1) checkTrue = false
-        if(checkTrue) seletCell(x, y)
     }
+
+    private fun updateStopWatchView(timeInSecons: Long) {
+        val formattedTime = getFormattedStopWatch(timeInSecons * 1000)
+        var tvTimeData = findViewById<TextView>(R.id.tvTimeData)
+        tvTimeData.text = formattedTime
+    }
+
+    private fun getFormattedStopWatch(ms: Long): String {
+        var miliSecons = ms
+        val minutes = TimeUnit.MILLISECONDS.toMinutes(miliSecons)
+        miliSecons -= TimeUnit.MINUTES.toMillis(minutes)
+        val secons = TimeUnit.MILLISECONDS.toSeconds(miliSecons)
+        return "${if(minutes < 10) "0" else ""}$minutes:"+
+                "${if(secons < 10) "0" else ""}$secons"
+    }
+
+    private fun startTime(){
+        mHandler = Handler(Looper.getMainLooper())
+        chronometer.run()
+
+    }
+
+    private fun resetTime(){
+        mHandler?.removeCallbacks(chronometer)
+        timeInSecons = 0
+        var tvTimeData = findViewById<TextView>(R.id.tvTimeData)
+        tvTimeData.text = "00:00"
+    }
+
 }
