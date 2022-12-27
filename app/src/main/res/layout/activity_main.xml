@@ -867,13 +867,11 @@
                             android:tag="c70" />
                     </TableRow>
                 </TableLayout>
-
                 <LinearLayout
                     android:id="@+id/lyMessage"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_centerVertical="true"
-                    android:layout_marginTop="45dp"
                     android:background="@color/message_bg"
                     android:orientation="vertical">
 
@@ -902,26 +900,41 @@
                         android:text="Lives: 1"
                         android:textColor="@color/app_color_dark"
                         android:textSize="45sp" />
-
-                    <Button
-                        android:id="@+id/btnNextLevel"
+                    <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="80dp"
-                        android:layout_marginHorizontal="20dp"
-                        android:layout_marginBottom="10dp"
-                        android:layout_gravity="center"
-                        android:layout_marginTop="10dp"
-                        android:fontFamily="@font/amaranth_regular"
-                        android:shadowColor="@color/white"
-                        android:backgroundTint="@color/black"
-                        android:shadowRadius="8"
-                        android:onClick="startGame"
-                        android:text="@string/nextLevel"
-                        android:textColor="@color/app_color_light"
-                        android:textSize="16sp" />
+                        android:layout_height="match_parent"
+                        android:layout_marginBottom="30dp"
+                        android:layout_weight="1"
+                        android:layout_marginTop="25dp"
+                        android:layout_marginHorizontal="10dp"
+                        android:orientation="vertical">
+                        <TextView
+                            android:id="@+id/btnNextLevel"
+                            android:onClick="startGame"
+                            android:layout_weight="1"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_button_top"
+                            android:fontFamily="@font/amaranth_bold"
+                            android:paddingTop="10dp"
+                            android:text="@string/nextLevel"
+                            android:textAlignment="center"
+                            android:padding="10dp"
+                            android:textColor="@color/app_color_light"
+                            android:textSize="18sp" />
+                        <ImageView
+                            android:id="@+id/btnShared"
+                            android:layout_weight="1"
+                            android:onClick="launcheShareGame"
+                            android:src="@drawable/ic_share"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_button_bottom"
+                            android:padding="10dp"/>
+                    </LinearLayout>
                 </LinearLayout>
-            </RelativeLayout>
 
+            </RelativeLayout>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -929,7 +942,6 @@
                 android:fontFamily="@font/amaranth_bold"
                 android:text="@string/instructions"
                 android:textSize="14sp" />
-
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -938,7 +950,9 @@
                 android:text="@string/credits"
                 android:textSize="12sp" />
         </LinearLayout>
+
     </ScrollView>
+
     <LinearLayout
         android:id="@+id/lyAdsBanner"
         android:orientation="vertical"

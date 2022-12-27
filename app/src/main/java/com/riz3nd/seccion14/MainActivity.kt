@@ -1,15 +1,34 @@
 package com.riz3nd.seccion14
 
+import android.Manifest
+import android.annotation.SuppressLint
+import android.content.ContentValues
+import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.Point
+import android.media.MediaScannerConnection
+import android.net.Uri
+import android.os.Build.VERSION.SDK_INT
+import android.os.Build.VERSION_CODES
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Environment
 import android.os.Handler
 import android.os.Looper
+import android.provider.MediaStore
 import android.util.TypedValue
+import android.view.Gravity.apply
 import android.view.View
 import android.widget.*
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import java.lang.Exception
+import androidx.test.runner.screenshot.ScreenCapture
+import androidx.test.runner.screenshot.Screenshot
+import androidx.test.runner.screenshot.Screenshot.capture
+import java.io.File
+import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
@@ -22,12 +41,15 @@ class MainActivity : AppCompatActivity() {
     private var nameColorWhite = "white_cell"
     private var levelMoves = 64
     private var moves = 64
-    private var movesRequired = 8
+    private var movesRequired = 16
     private var bonus = 0
     private var width_Bonus = 0
     private var checkMovement = true
     private var mHandler:Handler? = null
     private var timeInSecons:Long = 0
+    private var bitmap:Bitmap? = null
+    private var string_share = ""
+    private var level = 1
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -147,6 +169,73 @@ class MainActivity : AppCompatActivity() {
         selectCell(x, y)
     }
 
+    fun launcheShareGame(v: View){
+        shareGame()
+    }
+
+    private fun shareGame() {
+        ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 1)
+        ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 1)
+        var ssc: ScreenCapture = capture(this);
+        bitmap = ssc.bitmap
+        if (bitmap != null){
+            var idGame = SimpleDateFormat("yyyy/MM/dd").format(Date())
+            idGame = idGame.replace(":","")
+            idGame = idGame.replace("/","")
+            val path = saveImage(bitmap, "$idGame.jpg")
+            val bmpUri = Uri.parse(path)
+            val shareIntent = Intent(Intent.ACTION_SEND)
+            shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            shareIntent.putExtra(Intent.EXTRA_STREAM, bmpUri)
+            shareIntent.putExtra(Intent.EXTRA_TEXT, string_share)
+            shareIntent.type = "image/png"
+            val finalShareIntent = Intent.createChooser(shareIntent, "Selecciona la app donde quieres compartir tu puntaje")
+            finalShareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            this.startActivity(finalShareIntent)
+        }
+    }
+
+    private fun saveImage(bitmap: Bitmap?, fileName: String): String? {
+        if (bitmap == null)
+            return null
+
+        if (SDK_INT >= VERSION_CODES.O){
+            val contentValues = ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+                put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES+"/Screenshots")
+            }
+            val uri = this.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+            if(uri != null){
+                this.contentResolver.openOutputStream(uri).use {
+                    if (it == null)
+                        return@use
+
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 85, it)
+                    it.flush()
+                    it.close()
+
+                    MediaScannerConnection.scanFile(this, arrayOf(uri.toString()), null, null)
+                }
+            }
+            return uri.toString()
+        }
+        val filePath = Environment.getExternalStoragePublicDirectory(
+            Environment.DIRECTORY_PICTURES+"/Screenshots"
+        ).absolutePath
+
+        val dir = File(filePath)
+        if (!dir.exists()) dir.mkdirs()
+        val file = File(dir, fileName)
+        val fOut = FileOutputStream(file)
+
+        bitmap.compress(Bitmap.CompressFormat.PNG, 85, fOut)
+        fOut.flush()
+        fOut.close()
+
+        MediaScannerConnection.scanFile(this, arrayOf(file.toString()), null, null)
+        return filePath
+    }
 
     private fun checkCell(x: Int, y: Int) {
         var checkTrue = true
@@ -253,20 +342,26 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    fun showMessage(title:String, message:String, status:Boolean){
+    fun showMessage(title:String, message:String, gameOver:Boolean){
         var lyMessage = findViewById<LinearLayout>(R.id.lyMessage)
         var tvIntroLevel = findViewById<TextView>(R.id.tvTitleMessage)
         var tvScoreMessage = findViewById<TextView>(R.id.tvScoreMessage)
-        var btnNextLevel = findViewById<Button>(R.id.btnNextLevel)
+        var btnNextLevel = findViewById<TextView>(R.id.btnNextLevel)
         var tvTimeData = findViewById<TextView>(R.id.tvTimeData)
+        var score = ""
         gaming = false
 
         lyMessage.visibility = View.VISIBLE
-        if(status){
-            tvScoreMessage.text = "Score: ${levelMoves - moves}/$levelMoves"
+        if(gameOver){
+//            tvScoreMessage.text = "Score: ${levelMoves - moves}/$levelMoves"
+            score = "Score: ${levelMoves - moves}/$levelMoves"
+            string_share = "Casi!!. $score"
         }else{
-            tvScoreMessage.text = "${tvTimeData.text}"
+            score = "${tvTimeData.text}"
+//            tvScoreMessage.text = "${tvTimeData.text}"
+            string_share = "Vamos!!, Nuevo nivel completado. Nivel: $level ($score)"
         }
+        tvScoreMessage.text = score
         tvIntroLevel.text = title
         btnNextLevel.text = message
     }
